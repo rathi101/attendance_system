@@ -419,6 +419,20 @@ function calculateAvgWorkingHours(attendance) {
   return (totalHours / completedRecords.length).toFixed(2);
 }
 
+// Health check route
+app.get('/', (req, res) => {
+  res.json({ 
+    message: 'Attendance System API is running!',
+    status: 'healthy',
+    timestamp: new Date().toISOString(),
+    endpoints: {
+      login: '/api/login',
+      attendance: '/api/attendance',
+      users: '/api/users'
+    }
+  });
+});
+
 app.listen(PORT, () => {
   console.log(`🚀 Attendance Backend running on http://localhost:${PORT}`);
   console.log('📱 Ready for Flutter app and Web panel connections');

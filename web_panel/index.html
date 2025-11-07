@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attendance Management - Login</title>
+    <link rel="stylesheet" href="assets/style.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .login-container {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .logo h1 {
+            color: #333;
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .logo p {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #555;
+            font-weight: 500;
+        }
+
+        input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 0.75rem;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.3s;
+            margin-bottom: 1rem;
+        }
+
+        .btn:hover {
+            background: #5a6fd8;
+        }
+
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .error {
+            color: #dc3545;
+            text-align: center;
+            margin-top: 1rem;
+            padding: 0.5rem;
+            background: #f8d7da;
+            border-radius: 5px;
+            display: none;
+        }
+
+        .success {
+            color: #155724;
+            text-align: center;
+            margin-top: 1rem;
+            padding: 0.5rem;
+            background: #d4edda;
+            border-radius: 5px;
+            display: none;
+        }
+
+        .otp-section {
+            display: none;
+        }
+
+        .demo-credentials {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+            font-size: 0.85rem;
+            color: #666;
+        }
+
+        .demo-credentials h4 {
+            margin-bottom: 0.5rem;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="logo">
+            <h1>🏢 Attendance</h1>
+            <p>Management System</p>
+        </div>
+
+        <div id="loginSection">
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="username">Username:</label>
+                    <input type="text" id="username" name="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password:</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+                <button type="submit" class="btn" id="loginBtn">Login</button>
+            </form>
+        </div>
+
+        <div id="otpSection" class="otp-section">
+            <form id="otpForm">
+                <div class="form-group">
+                    <label for="otp">Enter OTP sent to your email:</label>
+                    <input type="text" id="otp" name="otp" maxlength="6" required>
+                </div>
+                <button type="submit" class="btn" id="otpBtn">Verify OTP</button>
+                <button type="button" class="btn" id="backBtn" style="background: #6c757d;">Back to Login</button>
+            </form>
+        </div>
+
+        <div id="error" class="error"></div>
+        <div id="success" class="success"></div>
+
+        <div class="demo-credentials">
+            <h4>Demo Credentials:</h4>
+            <p><strong>Admin:</strong> admin / admin123</p>
+            <p><strong>HR:</strong> hr001 / hr123</p>
+            <p><strong>Manager:</strong> mgr001 / mgr123</p>
+            <p><strong>Employee:</strong> emp001 / emp123</p>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:3002/api';
+        let currentUserId = null;
+
+        document.getElementById('loginForm').addEventListener('submit', handleLogin);
+        document.getElementById('otpForm').addEventListener('submit', handleOTPVerification);
+        document.getElementById('backBtn').addEventListener('click', showLoginSection);
+
+        async function handleLogin(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const loginBtn = document.getElementById('loginBtn');
+            
+            loginBtn.disabled = true;
+            loginBtn.textContent = 'Logging in...';
+            hideMessages();
+
+            try {
+                const response = await fetch(`${API_BASE}/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ username, password }),
+                });
+
+                const data = await response.json();
+
+                if (data.requiresOTP) {
+                    currentUserId = data.userId;
+                    showOTPSection();
+                    showSuccess(data.message + ' (Check browser console for demo OTP)');
+                    
+                    // For demo - show OTP in alert (remove in production)
+                    setTimeout(() => {
+                        alert('Demo Mode: Check the backend console/terminal for OTP');
+                    }, 1000);
+                } else if (data.success) {
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    redirectToDashboard(data.user.role);
+                } else {
+                    showError(data.error || 'Login failed');
+                }
+            } catch (error) {
+                showError('Network error. Please try again.');
+            } finally {
+                loginBtn.disabled = false;
+                loginBtn.textContent = 'Login';
+            }
+        }
+
+        async function handleOTPVerification(e) {
+            e.preventDefault();
+            
+            const otp = document.getElementById('otp').value;
+            const otpBtn = document.getElementById('otpBtn');
+            
+            otpBtn.disabled = true;
+            otpBtn.textContent = 'Verifying...';
+            hideMessages();
+
+            try {
+                const response = await fetch(`${API_BASE}/verify-otp`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ userId: currentUserId, otp }),
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    redirectToDashboard(data.user.role);
+                } else {
+                    showError(data.error || 'OTP verification failed');
+                }
+            } catch (error) {
+                showError('Network error. Please try again.');
+            } finally {
+                otpBtn.disabled = false;
+                otpBtn.textContent = 'Verify OTP';
+            }
+        }
+
+        function showLoginSection() {
+            document.getElementById('loginSection').style.display = 'block';
+            document.getElementById('otpSection').style.display = 'none';
+            document.getElementById('otp').value = '';
+            hideMessages();
+        }
+
+        function showOTPSection() {
+            document.getElementById('loginSection').style.display = 'none';
+            document.getElementById('otpSection').style.display = 'block';
+        }
+
+        function redirectToDashboard(role) {
+            switch (role) {
+                case 'admin':
+                    window.location.href = 'admin.html';
+                    break;
+                case 'hr':
+                    window.location.href = 'hr.html';
+                    break;
+                case 'manager':
+                    window.location.href = 'manager.html';
+                    break;
+                case 'employee':
+                    showError('Employees must use the mobile app');
+                    break;
+                default:
+                    showError('Invalid user role');
+            }
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('error');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            document.getElementById('success').style.display = 'none';
+        }
+
+        function showSuccess(message) {
+            const successDiv = document.getElementById('success');
+            successDiv.textContent = message;
+            successDiv.style.display = 'block';
+            document.getElementById('error').style.display = 'none';
+        }
+
+        function hideMessages() {
+            document.getElementById('error').style.display = 'none';
+            document.getElementById('success').style.display = 'none';
+        }
+
+        // Check if already logged in
+        window.addEventListener('load', () => {
+            const token = localStorage.getItem('token');
+            const user = localStorage.getItem('user');
+            
+            if (token && user) {
+                const userData = JSON.parse(user);
+                redirectToDashboard(userData.role);
+            }
+        });
+    </script>
+</body>
+</html>

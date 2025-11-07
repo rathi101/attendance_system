@@ -1,19 +1,17 @@
 // Simple start script for Render deployment
 const path = require('path');
-const { spawn } = require('child_process');
 
 console.log('Starting Attendance System...');
 console.log('Current directory:', __dirname);
-console.log('Backend path:', path.join(__dirname, 'backend'));
 
-// Change to backend directory and start server
+// Change to backend directory and require server
 process.chdir(path.join(__dirname, 'backend'));
-const server = spawn('node', ['server.js'], { stdio: 'inherit' });
+console.log('Changed to backend directory');
 
-server.on('error', (err) => {
-    console.error('Failed to start server:', err);
-});
-
-server.on('close', (code) => {
-    console.log(`Server process exited with code ${code}`);
-});
+// Require the server file directly
+try {
+    require('./backend/server.js');
+} catch (error) {
+    console.error('Error starting server:', error);
+    process.exit(1);
+}

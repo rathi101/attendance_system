@@ -197,6 +197,9 @@
             loginBtn.textContent = 'Logging in...';
             hideMessages();
 
+            console.log('API_BASE:', API_BASE);
+            console.log('Attempting login for:', username);
+
             try {
                 const response = await fetch(`${API_BASE}/login`, {
                     method: 'POST',
@@ -206,7 +209,9 @@
                     body: JSON.stringify({ username, password }),
                 });
 
+                console.log('Response status:', response.status);
                 const data = await response.json();
+                console.log('Response data:', data);
 
                 if (data.requiresOTP) {
                     currentUserId = data.userId;
@@ -225,7 +230,8 @@
                     showError(data.error || 'Login failed');
                 }
             } catch (error) {
-                showError('Network error. Please try again.');
+                console.error('Login error:', error);
+                showError('Network error: ' + error.message);
             } finally {
                 loginBtn.disabled = false;
                 loginBtn.textContent = 'Login';

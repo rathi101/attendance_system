@@ -1,0 +1,76 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "username": "admin",
+      "password": "$2a$10$31jwM43H6NiDXnKS62eaCeAerHxmiGoB.yi2C5mLh09cztxtIE.n.",
+      "name": "Admin User",
+      "role": "admin",
+      "email": "admin@company.com"
+    },
+    {
+      "id": 2,
+      "username": "hr001",
+      "password": "$2a$10$V/uKxn5mUrE4m44HR9Gy6eDQpk8jKRgHzs4NcsdoitZ.FDd6DR7dm",
+      "name": "HR Manager",
+      "role": "hr",
+      "email": "hr@company.com"
+    },
+    {
+      "id": 3,
+      "username": "mgr001",
+      "password": "$2a$10$nXhVr7hIa7s9Howfqfkr7OFVPjIHZ0yOsMpbejloyeJ0JlpLcIiMO",
+      "name": "Team Manager",
+      "role": "manager",
+      "email": "manager@company.com"
+    },
+    {
+      "id": 4,
+      "username": "emp001",
+      "password": "$2a$10$Jv8P/Gav063lbs9OsQmp8OYUjkrkWRW8jAQiTMoPV9sJAbAK3z45W",
+      "name": "John Doe",
+      "role": "employee",
+      "email": "john@company.com"
+    }
+  ],
+  "attendance": [
+    {
+      "id": 1762512853390,
+      "userId": 4,
+      "date": "2025-11-07",
+      "punchIn": "2025-11-07T10:54:13.390Z",
+      "punchOut": "2025-11-07T10:54:17.809Z",
+      "location": {
+        "latitude": 28.460267933264596,
+        "longitude": 77.03357682983722
+      },
+      "distance": 10,
+      "status": "absent",
+      "punchOutLocation": {
+        "latitude": 28.460252577640365,
+        "longitude": 77.03355748254742
+      },
+      "workingHours": "0.00"
+    }
+  ],
+  "notifications": [
+    {
+      "id": 1762512853390,
+      "userId": 4,
+      "message": "Punched in successfully (Late arrival - Half day)",
+      "type": "punch_in",
+      "timestamp": "2025-11-07T10:54:13.390Z",
+      "read": false
+    },
+    {
+      "id": 1762512857809,
+      "userId": 4,
+      "message": "Punched out - Marked as Absent (Less than 4 hours)",
+      "type": "punch_out",
+      "timestamp": "2025-11-07T10:54:17.809Z",
+      "read": false
+    }
+  ],
+  "otpStore": {},
+  "nextId": 5
+}

@@ -1,9 +1,9 @@
 {
   "name": "attendance-system-complete",
   "version": "1.0.0",
-  "main": "backend/server.js",
+  "main": "start.js",
   "scripts": {
-    "start": "cd backend && npm start",
+    "start": "node start.js",
     "build": "cd backend && npm install"
   },
   "engines": {

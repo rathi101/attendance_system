@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import 'dashboard_screen.dart';
+import 'admin_dashboard.dart';
+import 'hr_dashboard.dart';
+import 'manager_dashboard.dart';
 
 class LoginScreen extends StatefulWidget {
   @override
@@ -10,9 +13,12 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin {
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _otpController = TextEditingController();
   bool _isLoading = false;
   String _errorMessage = '';
   bool _obscurePassword = true;
+  bool _showOTPField = false;
+  int? _pendingUserId;
   
   late AnimationController _animationController;
   late AnimationController _pulseController;
@@ -55,6 +61,63 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
     super.dispose();
   }
 
+  void _navigateToRoleDashboard(Map<String, dynamic> user) {
+    Widget dashboard;
+    switch (user['role']) {
+      case 'admin':
+        dashboard = AdminDashboard();
+        break;
+      case 'hr':
+        dashboard = HRDashboard();
+        break;
+      case 'manager':
+        dashboard = ManagerDashboard();
+        break;
+      default:
+        dashboard = DashboardScreen(user: user);
+    }
+    
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => dashboard),
+    );
+  }
+  
+  Future<void> _verifyOTP() async {
+    if (_pendingUserId == null || _otpController.text.isEmpty) {
+      setState(() {
+        _errorMessage = 'Please enter OTP';
+      });
+      return;
+    }
+    
+    setState(() {
+      _isLoading = true;
+      _errorMessage = '';
+    });
+    
+    try {
+      final result = await ApiService.verifyOTP(_pendingUserId!, _otpController.text);
+      
+      if (result['success'] == true) {
+        await ApiService.saveToken(result['token']);
+        _navigateToRoleDashboard(result['user']);
+      } else {
+        setState(() {
+          _errorMessage = result['error'] ?? 'Invalid OTP';
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'Network error. Please try again.';
+      });
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
   Future<void> _login() async {
     setState(() {
       _isLoading = true;
@@ -69,12 +132,13 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
 
       if (result['success'] == true) {
         await ApiService.saveToken(result['token']);
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => DashboardScreen(user: result['user']),
-          ),
-        );
+        _navigateToRoleDashboard(result['user']);
+      } else if (result['requiresOTP'] == true) {
+        setState(() {
+          _showOTPField = true;
+          _pendingUserId = result['userId'];
+          _errorMessage = '';
+        });
       } else {
         setState(() {
           _errorMessage = result['error'] ?? 'Login failed';
@@ -269,9 +333,38 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                                 ),
                               ),
                               
+                              
+                              // OTP Field (conditional)
+                              if (_showOTPField) ...[
+                                SizedBox(height: 16),
+                                Container(
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(12),
+                                    color: Colors.white.withOpacity(0.1),
+                                    border: Border.all(
+                                      color: Colors.white.withOpacity(0.3),
+                                    ),
+                                  ),
+                                  child: TextField(
+                                    controller: _otpController,
+                                    keyboardType: TextInputType.number,
+                                    maxLength: 6,
+                                    style: TextStyle(color: Colors.white),
+                                    decoration: InputDecoration(
+                                      labelText: 'Enter OTP',
+                                      labelStyle: TextStyle(color: Colors.white70),
+                                      prefixIcon: Icon(Icons.security, color: Colors.white70),
+                                      border: InputBorder.none,
+                                      contentPadding: EdgeInsets.all(16),
+                                      counterText: '',
+                                    ),
+                                  ),
+                                ),
+                              ],
+                              
                               SizedBox(height: 24),
                               
-                              // Login Button
+                              // Login/Verify Button
                               Container(
                                 width: double.infinity,
                                 height: 56,
@@ -294,7 +387,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                                   color: Colors.transparent,
                                   child: InkWell(
                                     borderRadius: BorderRadius.circular(12),
-                                    onTap: _isLoading ? null : _login,
+                                    onTap: _isLoading ? null : (_showOTPField ? _verifyOTP : _login),
                                     child: Center(
                                       child: _isLoading
                                           ? Row(
@@ -310,7 +403,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                                                 ),
                                                 SizedBox(width: 12),
                                                 Text(
-                                                  'Authenticating...',
+                                                  _showOTPField ? 'Verifying OTP...' : 'Authenticating...',
                                                   style: TextStyle(
                                                     color: Colors.white,
                                                     fontSize: 16,
@@ -325,7 +418,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                                                 Icon(Icons.login, color: Colors.white),
                                                 SizedBox(width: 8),
                                                 Text(
-                                                  'Sign In',
+                                                  _showOTPField ? 'Verify OTP' : 'Sign In',
                                                   style: TextStyle(
                                                     color: Colors.white,
                                                     fontSize: 16,
@@ -403,13 +496,41 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                               ],
                             ),
                             SizedBox(height: 8),
-                            Text(
-                              'Employee: emp001 / emp123',
-                              style: TextStyle(
-                                color: Colors.white60,
-                                fontSize: 12,
-                                fontFamily: 'monospace',
-                              ),
+                            Column(
+                              children: [
+                                Text(
+                                  'Employee: emp001 / emp123',
+                                  style: TextStyle(
+                                    color: Colors.white60,
+                                    fontSize: 12,
+                                    fontFamily: 'monospace',
+                                  ),
+                                ),
+                                Text(
+                                  'Admin: admin / admin123 (OTP required)',
+                                  style: TextStyle(
+                                    color: Colors.white60,
+                                    fontSize: 12,
+                                    fontFamily: 'monospace',
+                                  ),
+                                ),
+                                Text(
+                                  'HR: hr001 / hr123 (OTP required)',
+                                  style: TextStyle(
+                                    color: Colors.white60,
+                                    fontSize: 12,
+                                    fontFamily: 'monospace',
+                                  ),
+                                ),
+                                Text(
+                                  'Manager: mgr001 / mgr123 (OTP required)',
+                                  style: TextStyle(
+                                    color: Colors.white60,
+                                    fontSize: 12,
+                                    fontFamily: 'monospace',
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
                         ),

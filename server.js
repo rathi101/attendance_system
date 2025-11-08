@@ -417,7 +417,11 @@ function calculateAvgWorkingHours(attendance) {
   return (totalHours / completedRecords.length).toFixed(2);
 }
 
-// Health check route
+// Health check routes
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'OK', timestamp: new Date().toISOString() });
+});
+
 app.get('/', (req, res) => {
   res.json({ 
     message: 'Attendance System API is running!',

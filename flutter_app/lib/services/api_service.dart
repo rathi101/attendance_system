@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiService {
-  static const String baseUrl = 'https://attendance-system-complete.onrender.com/api';
+  static const String baseUrl = 'http://localhost:3000/api';
   
   static Future<String?> getToken() async {
     final prefs = await SharedPreferences.getInstance();
@@ -73,6 +73,65 @@ class ApiService {
     final response = await http.get(
       Uri.parse('$baseUrl/notifications/$userId'),
       headers: {'Authorization': 'Bearer $token'},
+    );
+    
+    return jsonDecode(response.body);
+  }
+  
+  static Future<List<dynamic>> getAllAttendance() async {
+    final token = await getToken();
+    final response = await http.get(
+      Uri.parse('$baseUrl/attendance'),
+      headers: {'Authorization': 'Bearer $token'},
+    );
+    
+    return jsonDecode(response.body);
+  }
+  
+  static Future<List<dynamic>> getUsers() async {
+    final token = await getToken();
+    final response = await http.get(
+      Uri.parse('$baseUrl/users'),
+      headers: {'Authorization': 'Bearer $token'},
+    );
+    
+    return jsonDecode(response.body);
+  }
+  
+  static Future<Map<String, dynamic>> getAnalytics() async {
+    final token = await getToken();
+    final response = await http.get(
+      Uri.parse('$baseUrl/analytics'),
+      headers: {'Authorization': 'Bearer $token'},
+    );
+    
+    return jsonDecode(response.body);
+  }
+  
+  static Future<Map<String, dynamic>> addUser(String username, String password, String name, String email) async {
+    final token = await getToken();
+    final response = await http.post(
+      Uri.parse('$baseUrl/users'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({
+        'username': username,
+        'password': password,
+        'name': name,
+        'email': email,
+      }),
+    );
+    
+    return jsonDecode(response.body);
+  }
+  
+  static Future<Map<String, dynamic>> verifyOTP(int userId, String otp) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/verify-otp'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'userId': userId, 'otp': otp}),
     );
     
     return jsonDecode(response.body);

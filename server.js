@@ -18,11 +18,11 @@ const OFFICE_LOCATION = {
 const ALLOWED_RADIUS = 200; // meters
 
 app.use(cors({
-  origin: ['https://attendance-system-xiks.onrender.com', 'https://attendance-system-complete.onrender.com', 'http://localhost:3002', 'http://127.0.0.1:3002', 'http://localhost:8080', 'http://127.0.0.1:8080', 'http://localhost:9000', 'http://127.0.0.1:9000', 'http://localhost:9001', 'http://127.0.0.1:9001', 'file://', 'null'],
+  origin: '*',
   credentials: true
 }));
 app.use(express.json());
-app.use(express.static('../web_panel'));
+// Web panel removed - Flutter app only
 
 // Security headers
 app.use((req, res, next) => {
